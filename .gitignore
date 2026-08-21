@@ -1,0 +1,8 @@
+.svelte-kit
+build
+coverage
+node_modules
+.DS_Store
+dist
+.dist
+package-lock.json
