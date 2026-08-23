@@ -23,8 +23,8 @@
 
   let weekStart = createWeekStart(new Date());
   let selectedDayIndex = 0;
-  let shifts: Shift[] = defaultShifts();
-  let events: EventItem[] = defaultEvents();
+  let shifts: Shift[] = [];
+  let events: EventItem[] = [];
   let shiftModalOpen = false;
   let eventModalOpen = false;
   let editingShift: Shift | null = null;
@@ -61,8 +61,8 @@
 
     if (!raw) {
       selectedDayIndex = 0;
-      shifts = defaultShifts();
-      events = defaultEvents();
+      shifts = [];
+      events = [];
       return;
     }
 
