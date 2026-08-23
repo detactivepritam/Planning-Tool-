@@ -447,7 +447,7 @@
 
     .menus {
       width: 100%;
-      justify-content: flex-end;
+      justify-content: flex-start;
       gap: 0.4rem;
     }
 
