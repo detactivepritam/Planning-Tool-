@@ -49,6 +49,8 @@
 
 <style>
   .week-nav {
+    position: relative;
+    z-index: 5;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -110,7 +112,7 @@
     padding: 0;
     border-radius: 5px;
     overflow: hidden;
-    z-index: 10;
+    z-index: 100;
   }
 
   .view-options button {
@@ -166,6 +168,11 @@
     .view-trigger {
       min-width: 0;
       padding-inline: 0.65rem;
+    }
+
+    .view-options {
+      top: auto;
+      bottom: calc(100% + 0.45rem);
     }
   }
 </style>
