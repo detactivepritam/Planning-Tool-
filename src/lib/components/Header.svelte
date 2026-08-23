@@ -16,7 +16,7 @@
   <div class="brand">
     <div class="logo">P</div>
     <div>
-      <div class="name">Proxy</div>
+      <div class="name">Proxie</div>
       <div class="subtitle">Planning Tool</div>
     </div>
   </div>

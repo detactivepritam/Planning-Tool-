@@ -42,7 +42,7 @@
 </script>
 
 <div class="login-card surface">
-  <div class="eyebrow">Proxy Planning Tool</div>
+  <div class="eyebrow">Proxie Planning Tool</div>
   <h1>Sign in to plan the week</h1>
   <p>Use the demo login to enter the planning workspace.</p>
 

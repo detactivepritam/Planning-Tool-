@@ -25,8 +25,8 @@
 </script>
 
 <svelte:head>
-  <title>Proxy Planning Tool</title>
-  <meta name="description" content="Proxy login page" />
+  <title>Proxie Planning Tool</title>
+  <meta name="description" content="Proxie login page" />
 </svelte:head>
 
 <main class="login-page">
@@ -34,7 +34,7 @@
     <div class="brand">
       <div class="logo">P</div>
       <div>
-        <div class="title">Proxy</div>
+        <div class="title">Proxie</div>
         <div class="subtitle">Planning Tool</div>
       </div>
     </div>
