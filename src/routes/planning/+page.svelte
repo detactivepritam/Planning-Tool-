@@ -259,7 +259,7 @@
 </script>
 
 <svelte:head>
-  <title>Proxy Planning Tool</title>
+  <title>Proxie Planning Tool</title>
 </svelte:head>
 
 <main class="page">
@@ -437,22 +437,28 @@
 
     .secondary-row {
       align-items: stretch;
-      flex-direction: column;
+      flex-direction: row;
       gap: 0.5rem;
     }
 
     .count {
-      font-size: 1.35rem;
+      min-width: 0;
+      font-size: 1.15rem;
+      line-height: 1.2;
+      align-self: center;
     }
 
     .menus {
-      width: 100%;
-      justify-content: flex-start;
+      width: auto;
+      margin-left: auto;
+      justify-content: flex-end;
       gap: 0.4rem;
     }
 
     .menus :global(.trigger) {
       min-height: 2.75rem;
+      padding: 0.55rem 0.65rem;
+      font-size: 0.9rem;
     }
 
     .planning {
