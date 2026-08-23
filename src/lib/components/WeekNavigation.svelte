@@ -149,6 +149,23 @@
     .week-nav {
       align-items: flex-start;
       flex-direction: column;
+      padding: 0.85rem;
+    }
+
+    .controls {
+      width: 100%;
+      gap: 0.35rem;
+    }
+
+    .controls > button,
+    .view-menu,
+    .view-trigger {
+      flex: 1;
+    }
+
+    .view-trigger {
+      min-width: 0;
+      padding-inline: 0.65rem;
     }
   }
 </style>

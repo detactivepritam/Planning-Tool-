@@ -231,7 +231,8 @@
   }
 
   .member-grid {
-    overflow: hidden;
+    overflow-x: auto;
+    overflow-y: hidden;
     border-radius: 24px;
   }
 
@@ -519,8 +520,10 @@
   }
 
   @media (max-width: 900px) {
-    .grid {
+    .grid,
+    .member-grid {
       overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
     }
 
     .row,
@@ -531,7 +534,8 @@
 
   @media (hover: none) {
     .add-event,
-    .create-shift {
+    .create-shift,
+    .planning-shift {
       opacity: 1;
     }
   }

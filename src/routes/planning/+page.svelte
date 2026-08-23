@@ -424,4 +424,32 @@
       grid-template-columns: 1fr;
     }
   }
+
+  @media (max-width: 600px) {
+    .page {
+      padding: 0.5rem;
+    }
+
+    .toolbar {
+      padding: 0.65rem;
+      border-radius: 18px;
+    }
+
+    .secondary-row {
+      align-items: stretch;
+      gap: 0.5rem;
+    }
+
+    .count {
+      font-size: 1.35rem;
+    }
+
+    .menus {
+      gap: 0.4rem;
+    }
+
+    .planning {
+      border-radius: 16px;
+    }
+  }
 </style>
