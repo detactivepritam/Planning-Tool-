@@ -1,15 +1,24 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
   import Login from '$lib/components/Login.svelte';
+  import Signup from '$lib/components/Signup.svelte';
   import { auth } from '$lib/auth';
 
   let loading = false;
+  let signup = false;
 
   async function handleLogin(event: CustomEvent<{ identity: string; password: string }>) {
     loading = true;
     const { identity } = event.detail;
 
     auth.login(identity);
+    await goto('/planning', { invalidateAll: true });
+    loading = false;
+  }
+
+  async function handleSignup(event: CustomEvent<{ email: string; company: string; memberName: string }>) {
+    loading = true;
+    auth.login(event.detail.email, event.detail.company, event.detail.memberName);
     await goto('/planning', { invalidateAll: true });
     loading = false;
   }
@@ -36,7 +45,15 @@
     </div>
   </section>
 
-  <Login {loading} on:login={handleLogin} />
+  <div class="auth-column">
+    {#if signup}
+      <Signup on:complete={handleSignup} />
+      <button class="switch" type="button" on:click={() => signup = false}>Already have an account? Sign in</button>
+    {:else}
+      <Login {loading} on:login={handleLogin} />
+      <button class="switch" type="button" on:click={() => signup = true}>Create an account</button>
+    {/if}
+  </div>
 </main>
 
 <style>
@@ -61,6 +78,12 @@
       linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.95)),
       radial-gradient(circle at top right, rgba(29, 124, 242, 0.2), transparent 35%),
       radial-gradient(circle at bottom left, rgba(255, 170, 92, 0.16), transparent 26%);
+  }
+
+  .auth-column {
+    display: grid;
+    justify-items: center;
+    gap: 0.9rem;
   }
 
   .brand {
@@ -105,6 +128,14 @@
     color: var(--muted);
     font-size: 1.05rem;
     line-height: 1.7;
+  }
+
+  .switch {
+    justify-self: center;
+    border: none;
+    background: transparent;
+    color: var(--primary);
+    cursor: pointer;
   }
 
   @media (max-width: 960px) {

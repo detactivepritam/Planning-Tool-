@@ -6,6 +6,8 @@ const STORAGE_KEY = 'proxy_planning_auth';
 type AuthState = {
   isAuthenticated: boolean;
   user: string | null;
+  company?: string | null;
+  memberName?: string | null;
 };
 
 const initialState: AuthState = {
@@ -32,16 +34,20 @@ function createAuthStore() {
         const parsed = JSON.parse(raw) as AuthState;
         set({
           isAuthenticated: Boolean(parsed.isAuthenticated),
-          user: parsed.user ?? null
+          user: parsed.user ?? null,
+          company: parsed.company ?? null,
+          memberName: parsed.memberName ?? null
         });
       } catch {
         window.localStorage.removeItem(STORAGE_KEY);
       }
     },
-    login(user: string) {
+    login(user: string, company: string | null = null, memberName: string | null = null) {
       const nextState: AuthState = {
         isAuthenticated: true,
-        user
+        user,
+        company,
+        memberName
       };
 
       set(nextState);

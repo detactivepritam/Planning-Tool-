@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { formatDayHeader, type EventItem, type Shift, type TeamRow } from '$lib/planning';
+  import { formatDayHeader, weekKey, type EventItem, type Shift, type TeamRow } from '$lib/planning';
   import DayShowMenu from '$lib/components/DayShowMenu.svelte';
 
   export let dayDates: Date[] = [];
@@ -7,6 +7,7 @@
   export let shifts: Shift[] = [];
   export let events: EventItem[] = [];
   export let onAddShift: (teamId: string, dayIndex: number) => void;
+  export let onAddPlanningShift: (dayIndex: number) => void = (dayIndex) => onAddShift('general', dayIndex);
   export let onEditShift: (shift: Shift) => void;
   export let onAddEvent: (dayIndex: number) => void;
   export let onEditEvent: (eventItem: EventItem) => void;
@@ -15,6 +16,8 @@
   export let showEvents = true;
   export let showAvailability = true;
   export let showAbsent = true;
+  export let viewMode = 'Per team';
+  export let memberName = 'Planner';
   let openDayMenuIndex: number | null = null;
 
   $: eventsByDay = dayDates.map((_, dayIndex) => events.filter((eventItem) => eventItem.dayIndex === dayIndex));
@@ -40,8 +43,69 @@
     openDayMenuIndex = null;
     onSelectDay(dayIndex);
   }
+
+  function memberWeekLabel() {
+    const [year, week] = weekKey(dayDates[0] ?? new Date()).split('-W');
+    return `Week ${Number(week)} (${year})`;
+  }
+
+  function memberInitials() {
+    return memberName.split(/\s+/).filter(Boolean).map((part) => part[0]).join('').slice(0, 2).toUpperCase();
+  }
 </script>
 
+{#if viewMode === 'Per team member'}
+<div class="member-grid surface">
+  <div class="row header-row">
+    <div class="corner"><div class="label">{memberWeekLabel()}</div></div>
+    {#each dayDates as date, index}
+      <div class:selected={selectedDayIndex === index} class="day-cell" role="button" tabindex="0" on:click={() => selectDayAndCloseMenu(index)} on:keydown={(event) => event.key === 'Enter' || event.key === ' ' ? selectDayAndCloseMenu(index) : null}>
+        <div class="day-heading">
+          <span>{formatDayHeader(date)}</span>
+          <DayShowMenu open={openDayMenuIndex === index} onToggle={() => toggleDayMenu(index)} onClose={() => openDayMenuIndex = null} />
+        </div>
+        {#if showAvailability}<span class="availability-label">Availability: closed</span>{/if}
+      </div>
+    {/each}
+  </div>
+
+  {#if showEvents}
+  <div class="row event-row">
+    <div class="corner event-label"><div class="label">Events</div></div>
+    {#each dayDates as _, index}
+      <div class="cell event-cell">
+        <div class="events">
+          {#each eventsByDay[index] ?? [] as eventItem}
+            <button type="button" class="event-pill" on:click={() => onEditEvent(eventItem)}><strong>{eventItem.title}</strong><span>{eventItem.start ?? '09:00'} - {eventItem.end ?? '10:00'}</span></button>
+          {/each}
+        </div>
+        <button type="button" class="add-event" on:click={() => onAddEvent(index)}><span aria-hidden="true">+</span>Event</button>
+      </div>
+    {/each}
+  </div>
+  {/if}
+
+  <div class="row summary-row">
+    <div class="corner summary"><span>Open shifts</span><small>0 open shifts<br />00:00 planned hours</small></div>
+    {#each dayDates as _, index}
+      <div class="cell summary-cell">
+        <button type="button" class="planning-shift" aria-label={`Add planning shift for day ${index + 1}`} on:click|stopPropagation={() => onAddPlanningShift(index)}><span aria-hidden="true">+</span>Planning shift</button>
+      </div>
+    {/each}
+  </div>
+
+  <div class="row member-row">
+    <div class="corner member"><span class="avatar">{memberInitials()}</span><span>{memberName}</span></div>
+    {#each dayDates as _, index}
+      <div class="cell member-cell">
+        {#if (shiftsByTeamDay[0]?.[index] ?? []).length > 0}
+          {#each shiftsByTeamDay[0]?.[index] ?? [] as shift}<button type="button" class="shift-pill" on:click={() => onEditShift(shift)}><span>{shift.title}</span><strong>{shift.start} - {shift.end}</strong></button>{/each}
+        {:else}<span class="availability-dot" aria-label="Available"></span>{/if}
+      </div>
+    {/each}
+  </div>
+</div>
+{:else}
 <div class="grid surface">
   <div class="row header-row">
     <div class="corner">
@@ -65,7 +129,7 @@
             onClose={() => openDayMenuIndex = null}
           />
         </div>
-        <span class="availability-label">Availability: closed</span>
+        {#if showAvailability}<span class="availability-label">Availability: closed</span>{/if}
       </div>
     {/each}
   </div>
@@ -158,11 +222,90 @@
   </div>
   {/if}
 </div>
+{/if}
 
 <style>
   .grid {
     overflow: hidden;
     border-radius: 24px;
+  }
+
+  .member-grid {
+    overflow: hidden;
+    border-radius: 24px;
+  }
+
+  .summary {
+    display: grid;
+    align-content: center;
+    gap: 0.2rem;
+  }
+
+  .summary small {
+    color: var(--muted);
+    line-height: 1.35;
+  }
+
+  .summary-cell,
+  .member-cell {
+    justify-content: center;
+  }
+
+  .planning-shift {
+    min-height: 3.5rem;
+    border: 1px solid var(--primary);
+    border-radius: 6px;
+    background: var(--primary-soft);
+    color: var(--primary);
+    font-weight: 600;
+    opacity: 0;
+    transition: opacity 120ms ease, background 120ms ease;
+  }
+
+  .summary-cell:hover .planning-shift,
+  .summary-cell:focus-within .planning-shift {
+    opacity: 1;
+  }
+
+  .planning-shift:hover {
+    background: #c9e1ff;
+  }
+
+  .planning-shift span {
+    margin-right: 0.45rem;
+    font-size: 1.4rem;
+    font-weight: 300;
+    vertical-align: -0.1rem;
+  }
+
+  @media (hover: none) {
+    .planning-shift {
+      opacity: 1;
+    }
+  }
+
+  .member {
+    justify-content: flex-start;
+  }
+
+  .avatar {
+    width: 2rem;
+    height: 2rem;
+    border: 1px solid var(--primary);
+    border-radius: 50%;
+    display: grid;
+    place-items: center;
+    color: var(--primary);
+    font-size: 0.7rem;
+    font-weight: 700;
+  }
+
+  .availability-dot {
+    width: 0.75rem;
+    height: 0.75rem;
+    border-radius: 50%;
+    background: #35c99b;
+    align-self: center;
   }
 
   .row {

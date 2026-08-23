@@ -5,7 +5,22 @@
   export let onPreviousWeek: () => void;
   export let onNextWeek: () => void;
   export let onToday: () => void;
+  export let viewMode = 'Per team';
+  export let onViewChange: (mode: string) => void = () => {};
+
+  let viewMenuOpen = false;
+
+  function selectView(mode: string) {
+    onViewChange(mode);
+    viewMenuOpen = false;
+  }
+
+  function handleKeydown(event: KeyboardEvent) {
+    if (event.key === 'Escape') viewMenuOpen = false;
+  }
 </script>
+
+<svelte:window on:keydown={handleKeydown} />
 
 <div class="week-nav surface">
   <div class="meta">
@@ -14,6 +29,18 @@
   </div>
 
   <div class="controls">
+    <div class="view-menu">
+      <button type="button" class:active={viewMenuOpen} class="view-trigger" on:click={() => viewMenuOpen = !viewMenuOpen}>
+        <strong>{viewMode}</strong>
+        <span class="arrow" aria-hidden="true"></span>
+      </button>
+      {#if viewMenuOpen}
+        <div class="view-options surface">
+          <button type="button" class:selected={viewMode === 'Per team'} on:click={() => selectView('Per team')}>Per team</button>
+          <button type="button" class:selected={viewMode === 'Per team member'} on:click={() => selectView('Per team member')}>Per team member</button>
+        </div>
+      {/if}
+    </div>
     <button type="button" on:click={onPreviousWeek}>←</button>
     <button type="button" class="today" on:click={onToday}>Today</button>
     <button type="button" on:click={onNextWeek}>→</button>
@@ -45,6 +72,65 @@
   .controls {
     display: flex;
     gap: 0.5rem;
+    align-items: center;
+  }
+
+  .view-menu {
+    position: relative;
+  }
+
+  .view-trigger {
+    min-width: 8.2rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.7rem;
+  }
+
+  .view-trigger.active,
+  .view-trigger:hover {
+    border-color: rgba(29, 124, 242, 0.65);
+    background: var(--primary-soft);
+    color: var(--primary);
+  }
+
+  .arrow {
+    width: 0.45rem;
+    height: 0.45rem;
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    transform: translateY(-0.12rem) rotate(45deg);
+  }
+
+  .view-options {
+    position: absolute;
+    top: calc(100% + 0.45rem);
+    left: 0;
+    min-width: 10.5rem;
+    padding: 0;
+    border-radius: 5px;
+    overflow: hidden;
+    z-index: 10;
+  }
+
+  .view-options button {
+    width: 100%;
+    border: none;
+    border-bottom: 1px solid var(--border);
+    border-radius: 0;
+    padding: 0.8rem 1rem;
+    text-align: left;
+    color: var(--text);
+  }
+
+  .view-options button:last-child {
+    border-bottom: none;
+  }
+
+  .view-options button:hover,
+  .view-options button.selected {
+    background: var(--primary-soft);
+    color: var(--primary);
   }
 
   button {

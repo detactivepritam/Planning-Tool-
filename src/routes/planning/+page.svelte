@@ -28,12 +28,14 @@
   let shiftModalOpen = false;
   let eventModalOpen = false;
   let editingShift: Shift | null = null;
+  let planningShiftDraft = false;
   let editingEvent: EventItem | null = null;
   let showMenuOpen = false;
   let toolsMenuOpen = false;
   let showEvents = true;
   let showAvailability = true;
   let showAbsent = true;
+  let viewMode = 'Per team';
 
   const weekStoragePrefix = 'proxy_planning_week_';
 
@@ -54,6 +56,7 @@
   $: weekDays = getWeekDays(weekStart);
   $: plannedShiftCount = shifts.length;
   $: dayLabels = weekDays.map((date) => date.toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short' }));
+  $: memberName = $auth.memberName ?? 'Planner';
 
   function loadWeekState() {
     const key = `${weekStoragePrefix}${weekKey(weekStart)}`;
@@ -102,6 +105,7 @@
   }
 
   function openShiftModal(teamId: string, dayIndex: number) {
+    planningShiftDraft = false;
     editingShift = {
       id: createId(),
       teamId,
@@ -118,12 +122,25 @@
     shiftModalOpen = true;
   }
 
+  function openPlanningShiftModal(dayIndex: number) {
+    planningShiftDraft = true;
+    openShiftModal('general', dayIndex);
+    planningShiftDraft = true;
+  }
+
   function editShift(shift: Shift) {
     editingShift = shift;
     shiftModalOpen = true;
   }
 
   function saveShift(shift: Shift) {
+    if (planningShiftDraft) {
+      shiftModalOpen = false;
+      editingShift = null;
+      planningShiftDraft = false;
+      return;
+    }
+
     const savedShift: Shift = {
       ...shift,
       teamId: String(shift.teamId),
@@ -149,6 +166,7 @@
     saveWeekState();
     shiftModalOpen = false;
     editingShift = null;
+    planningShiftDraft = false;
   }
 
   function openEventModal(dayIndex: number) {
@@ -234,6 +252,10 @@
     if (label === 'Availability of team' || label === 'Availability open / closed') showAvailability = checked;
     if (label === 'Absent') showAbsent = checked;
   }
+
+  function changeView(mode: string) {
+    viewMode = mode;
+  }
 </script>
 
 <svelte:head>
@@ -244,7 +266,14 @@
   <Header />
 
   <div class="toolbar surface">
-    <WeekNavigation weekStart={weekStart} onPreviousWeek={previousWeek} onNextWeek={nextWeek} onToday={todayWeek} />
+    <WeekNavigation
+      weekStart={weekStart}
+      onPreviousWeek={previousWeek}
+      onNextWeek={nextWeek}
+      onToday={todayWeek}
+      {viewMode}
+      onViewChange={changeView}
+    />
 
     <div class="secondary-row">
       <div class="count">{plannedShiftCount} planned shifts</div>
@@ -275,6 +304,7 @@
       shifts={shifts}
       events={events}
       onAddShift={openShiftModal}
+      onAddPlanningShift={openPlanningShiftModal}
       onEditShift={editShift}
       onAddEvent={openEventModal}
       onEditEvent={editEvent}
@@ -283,6 +313,8 @@
       showEvents={showEvents}
       showAvailability={showAvailability}
       showAbsent={showAbsent}
+      {viewMode}
+      {memberName}
     />
   </section>
 
