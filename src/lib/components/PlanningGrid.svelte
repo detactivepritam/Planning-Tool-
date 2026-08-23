@@ -1,5 +1,6 @@
 <script lang="ts">
   import { formatDayHeader, type EventItem, type Shift, type TeamRow } from '$lib/planning';
+  import DayShowMenu from '$lib/components/DayShowMenu.svelte';
 
   export let dayDates: Date[] = [];
   export let teamRows: TeamRow[] = [];
@@ -11,6 +12,10 @@
   export let onEditEvent: (eventItem: EventItem) => void;
   export let selectedDayIndex: number | null = null;
   export let onSelectDay: (dayIndex: number) => void;
+  export let showEvents = true;
+  export let showAvailability = true;
+  export let showAbsent = true;
+  let openDayMenuIndex: number | null = null;
 
   $: eventsByDay = dayDates.map((_, dayIndex) => events.filter((eventItem) => eventItem.dayIndex === dayIndex));
   $: shiftsByTeamDay = teamRows.map((team) => dayDates.map((_, dayIndex) => shifts.filter((shift) => shift.teamId === team.id && shift.dayIndex === dayIndex)));
@@ -26,6 +31,15 @@
   function combinedItems(teamId: string, dayIndex: number) {
     return shiftForCell(teamId, dayIndex).map((shift) => ({ kind: 'shift' as const, item: shift }));
   }
+
+  function toggleDayMenu(dayIndex: number) {
+    openDayMenuIndex = openDayMenuIndex === dayIndex ? null : dayIndex;
+  }
+
+  function selectDayAndCloseMenu(dayIndex: number) {
+    openDayMenuIndex = null;
+    onSelectDay(dayIndex);
+  }
 </script>
 
 <div class="grid surface">
@@ -35,12 +49,28 @@
     </div>
 
     {#each dayDates as date, index}
-      <button type="button" class:selected={selectedDayIndex === index} class="day-cell" on:click={() => onSelectDay(index)}>
-        {formatDayHeader(date)}
-      </button>
+      <div
+        class:selected={selectedDayIndex === index}
+        class="day-cell"
+        role="button"
+        tabindex="0"
+        on:click={() => selectDayAndCloseMenu(index)}
+        on:keydown={(event) => event.key === 'Enter' || event.key === ' ' ? selectDayAndCloseMenu(index) : null}
+      >
+        <div class="day-heading">
+          <span>{formatDayHeader(date)}</span>
+          <DayShowMenu
+            open={openDayMenuIndex === index}
+            onToggle={() => toggleDayMenu(index)}
+            onClose={() => openDayMenuIndex = null}
+          />
+        </div>
+        <span class="availability-label">Availability: closed</span>
+      </div>
     {/each}
   </div>
 
+  {#if showEvents}
   <div class="row event-row">
     <div class="corner event-label">
       <div class="label">Events</div>
@@ -57,15 +87,14 @@
           {/each}
         </div>
 
-        {#if (eventsByDay[index] ?? []).length === 0}
-          <button type="button" class="add-event" on:click|stopPropagation={() => onAddEvent(index)}>
-            <span aria-hidden="true">+</span>
-            Event
-          </button>
-        {/if}
+        <button type="button" class="add-event" on:click|stopPropagation={() => onAddEvent(index)}>
+          <span aria-hidden="true">+</span>
+          Event
+        </button>
       </div>
     {/each}
   </div>
+  {/if}
 
   {#each teamRows as team}
     <div class="row body-row">
@@ -97,16 +126,17 @@
 
           {#if (shiftsByTeamDay[teamRows.indexOf(team)]?.[index] ?? []).length === 0}
             <span class="empty">00:00 / 00:00</span>
-            <button type="button" class="create-shift" on:click|stopPropagation={() => onAddShift(team.id, index)}>
-              <span aria-hidden="true">+</span>
-              Create shift
-            </button>
           {/if}
+          <button type="button" class="create-shift" on:click|stopPropagation={() => onAddShift(team.id, index)}>
+            <span aria-hidden="true">+</span>
+            Create shift
+          </button>
         </div>
       {/each}
     </div>
   {/each}
 
+  {#if showAvailability}
   <div class="section availability-row">
     <div class="corner section-label">Availability</div>
     {#each dayDates as _, index}
@@ -115,7 +145,9 @@
       </button>
     {/each}
   </div>
+  {/if}
 
+  {#if showAbsent}
   <div class="section absent-row">
     <div class="corner section-label">Absent</div>
     {#each dayDates as _, index}
@@ -124,6 +156,7 @@
       </button>
     {/each}
   </div>
+  {/if}
 </div>
 
 <style>
@@ -156,6 +189,20 @@
   .header-row .day-cell {
     min-height: 4.5rem;
     background: rgba(247, 250, 255, 0.96);
+  }
+
+  .day-heading {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.35rem;
+  }
+
+  .availability-label {
+    color: var(--muted);
+    font-size: 0.8rem;
+    white-space: nowrap;
   }
 
   .event-row .corner,

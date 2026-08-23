@@ -31,6 +31,9 @@
   let editingEvent: EventItem | null = null;
   let showMenuOpen = false;
   let toolsMenuOpen = false;
+  let showEvents = true;
+  let showAvailability = true;
+  let showAbsent = true;
 
   const weekStoragePrefix = 'proxy_planning_week_';
 
@@ -225,6 +228,12 @@
     saveWeekState();
     closeMenus();
   }
+
+  function updateShowOption(label: string, checked: boolean) {
+    if (label === 'Events') showEvents = checked;
+    if (label === 'Availability of team' || label === 'Availability open / closed') showAvailability = checked;
+    if (label === 'Absent') showAbsent = checked;
+  }
 </script>
 
 <svelte:head>
@@ -240,7 +249,12 @@
     <div class="secondary-row">
       <div class="count">{plannedShiftCount} planned shifts</div>
       <div class="menus">
-        <ShowMenu open={showMenuOpen} onToggle={() => { showMenuOpen = !showMenuOpen; toolsMenuOpen = false; }} onClose={closeMenus} />
+        <ShowMenu
+          open={showMenuOpen}
+          onToggle={() => { showMenuOpen = !showMenuOpen; toolsMenuOpen = false; }}
+          onClose={closeMenus}
+          onOptionChange={updateShowOption}
+        />
         <ToolsMenu
           open={toolsMenuOpen}
           onToggle={() => { toolsMenuOpen = !toolsMenuOpen; showMenuOpen = false; }}
@@ -266,6 +280,9 @@
       onEditEvent={editEvent}
       selectedDayIndex={selectedDayIndex}
       onSelectDay={selectDay}
+      showEvents={showEvents}
+      showAvailability={showAvailability}
+      showAbsent={showAbsent}
     />
   </section>
 
