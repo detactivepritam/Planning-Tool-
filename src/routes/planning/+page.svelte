@@ -437,6 +437,7 @@
 
     .secondary-row {
       align-items: stretch;
+      flex-direction: column;
       gap: 0.5rem;
     }
 
@@ -445,7 +446,13 @@
     }
 
     .menus {
+      width: 100%;
+      justify-content: flex-end;
       gap: 0.4rem;
+    }
+
+    .menus :global(.trigger) {
+      min-height: 2.75rem;
     }
 
     .planning {
