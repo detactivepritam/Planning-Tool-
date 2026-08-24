@@ -54,11 +54,13 @@ export function createWeekStart(date = new Date()) {
 }
 
 export function weekKey(weekStart: Date) {
-  const year = weekStart.getFullYear();
   const start = new Date(weekStart);
   start.setHours(0, 0, 0, 0);
-  const firstDay = new Date(year, 0, 1);
-  const diff = Math.floor((start.getTime() - createWeekStart(firstDay).getTime()) / (7 * 24 * 60 * 60 * 1000)) + 1;
+  const thursday = new Date(start);
+  thursday.setDate(thursday.getDate() + 3);
+  const year = thursday.getFullYear();
+  const firstWeekStart = createWeekStart(new Date(year, 0, 4));
+  const diff = Math.floor((start.getTime() - firstWeekStart.getTime()) / (7 * 24 * 60 * 60 * 1000)) + 1;
   return `${year}-W${pad(diff)}`;
 }
 

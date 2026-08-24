@@ -3,6 +3,7 @@
   import DayShowMenu from '$lib/components/DayShowMenu.svelte';
 
   export let dayDates: Date[] = [];
+  export let weekStart: Date = new Date();
   export let teamRows: TeamRow[] = [];
   export let shifts: Shift[] = [];
   export let events: EventItem[] = [];
@@ -22,6 +23,8 @@
 
   $: eventsByDay = dayDates.map((_, dayIndex) => events.filter((eventItem) => eventItem.dayIndex === dayIndex));
   $: shiftsByTeamDay = teamRows.map((team) => dayDates.map((_, dayIndex) => shifts.filter((shift) => shift.teamId === team.id && shift.dayIndex === dayIndex)));
+  $: weekParts = weekKey(weekStart).split('-W');
+  $: weekLabel = `Week ${Number(weekParts[1])} (${weekParts[0]})`;
 
   function shiftForCell(teamId: string, dayIndex: number) {
     return shifts.filter((shift) => shift.teamId === teamId && shift.dayIndex === dayIndex);
@@ -44,11 +47,6 @@
     onSelectDay(dayIndex);
   }
 
-  function memberWeekLabel() {
-    const [year, week] = weekKey(dayDates[0] ?? new Date()).split('-W');
-    return `Week ${Number(week)} (${year})`;
-  }
-
   function memberInitials() {
     return memberName.split(/\s+/).filter(Boolean).map((part) => part[0]).join('').slice(0, 2).toUpperCase();
   }
@@ -57,7 +55,7 @@
 {#if viewMode === 'Per team member'}
 <div class="member-grid surface">
   <div class="row header-row">
-    <div class="corner"><div class="label">{memberWeekLabel()}</div></div>
+    <div class="corner"><div class="label">{weekLabel}</div></div>
     {#each dayDates as date, index}
       <div class:selected={selectedDayIndex === index} class="day-cell" role="button" tabindex="0" on:click={() => selectDayAndCloseMenu(index)} on:keydown={(event) => event.key === 'Enter' || event.key === ' ' ? selectDayAndCloseMenu(index) : null}>
         <div class="day-heading">
@@ -109,7 +107,7 @@
 <div class="grid surface">
   <div class="row header-row">
     <div class="corner">
-      <div class="label">Week</div>
+      <div class="label">{weekLabel}</div>
     </div>
 
     {#each dayDates as date, index}
@@ -138,6 +136,7 @@
   <div class="row event-row">
     <div class="corner event-label">
       <div class="label">Events</div>
+      <button type="button" class="add" aria-label="Add event" on:click={() => onAddEvent(selectedDayIndex ?? 0)}>+</button>
     </div>
 
     {#each dayDates as _, index}
