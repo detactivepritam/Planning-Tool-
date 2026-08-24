@@ -203,8 +203,7 @@
   <div class="section availability-row">
     <div class="corner section-label">Availability</div>
     {#each dayDates as _, index}
-      <button type="button" class:selected={selectedDayIndex === index} class="cell compact" on:click={() => onSelectDay(index)}>
-        <span>Open availability</span>
+      <button type="button" class:selected={selectedDayIndex === index} class="cell compact" aria-label={`Availability for day ${index + 1}`} on:click={() => onSelectDay(index)}>
       </button>
     {/each}
   </div>
@@ -214,8 +213,7 @@
   <div class="section absent-row">
     <div class="corner section-label">Absent</div>
     {#each dayDates as _, index}
-      <button type="button" class:selected={selectedDayIndex === index} class="cell compact" on:click={() => onSelectDay(index)}>
-        <span>None</span>
+      <button type="button" class:selected={selectedDayIndex === index} class="cell compact" aria-label={`Absent status for day ${index + 1}`} on:click={() => onSelectDay(index)}>
       </button>
     {/each}
   </div>
@@ -314,6 +312,10 @@
     border-bottom: 1px solid var(--border);
   }
 
+  .body-row {
+    border-top: 1px solid var(--border);
+  }
+
   .row:last-child {
     border-bottom: none;
   }
@@ -351,6 +353,10 @@
   .event-row .corner,
   .event-row .cell {
     min-height: 3.1rem;
+  }
+
+  .event-row {
+    margin-bottom: 1.5rem;
   }
 
   .event-label {
@@ -510,6 +516,14 @@
   .compact {
     min-height: 3.8rem;
     color: var(--muted);
+  }
+
+  .availability-row {
+    border-bottom: 1px solid var(--border);
+  }
+
+  .absent-row {
+    margin-top: 1.5rem;
   }
 
   @media (max-width: 1200px) {
