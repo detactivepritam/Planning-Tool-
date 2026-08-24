@@ -23,11 +23,6 @@
 <svelte:window on:keydown={handleKeydown} />
 
 <div class="week-nav surface">
-  <div class="meta">
-    <div class="title">Planning</div>
-    <div class="week mono">{formatWeekLabel(weekStart)}</div>
-  </div>
-
   <div class="controls">
     <div class="view-menu">
       <button type="button" class:active={viewMenuOpen} class="view-trigger" on:click={() => viewMenuOpen = !viewMenuOpen}>
@@ -42,6 +37,7 @@
       {/if}
     </div>
     <button type="button" on:click={onPreviousWeek}>←</button>
+    <span class="week mono">{formatWeekLabel(weekStart)}</span>
     <button type="button" class="today" on:click={onToday}>Today</button>
     <button type="button" on:click={onNextWeek}>→</button>
   </div>
@@ -62,15 +58,11 @@
     margin-bottom: 0;
   }
 
-  .title {
-    font-family: 'Manrope', sans-serif;
-    font-size: 1.1rem;
-    font-weight: 700;
-  }
-
   .week {
-    color: var(--muted);
+    color: var(--text);
     font-size: 0.92rem;
+    white-space: nowrap;
+    padding: 0.42rem 0.7rem;
   }
 
   .controls {
@@ -147,6 +139,7 @@
   }
 
   .today {
+    display: none;
     padding-inline: 0.85rem;
   }
 

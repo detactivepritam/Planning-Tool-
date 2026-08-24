@@ -359,6 +359,10 @@
   .toolbar {
     position: relative;
     z-index: 30;
+    display: grid;
+    grid-template-columns: minmax(max-content, 1fr) auto minmax(max-content, 1fr);
+    align-items: center;
+    min-width: max-content;
     padding: 0;
     border: none;
     border-radius: 0;
@@ -367,28 +371,29 @@
   }
 
   .secondary-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    margin-top: 0.35rem;
-    min-height: 2.45rem;
-    padding: 0.25rem 0.4rem;
-    background: #eef2f5;
-    border-block: 1px solid #dfe4e8;
-    flex-wrap: wrap;
+    display: contents;
+  }
+
+  .toolbar :global(.week-nav) {
+    grid-column: 1;
+    grid-row: 1;
   }
 
   .count {
-    font-family: 'Manrope', sans-serif;
-    font-size: 1.05rem;
-    font-weight: 700;
-    color: #344256;
+    grid-column: 2;
+    grid-row: 1;
+    white-space: nowrap;
+    text-align: center;
   }
 
   .menus {
+    grid-column: 3;
+    grid-row: 1;
     display: flex;
+    align-items: center;
+    justify-content: flex-end;
     gap: 0.4rem;
+    white-space: nowrap;
   }
 
   .planning {
@@ -438,14 +443,12 @@
     }
 
     .toolbar {
-      padding: 0.65rem;
+      overflow-x: auto;
       border-radius: 6px;
     }
 
     .secondary-row {
-      align-items: stretch;
-      flex-direction: row;
-      gap: 0.5rem;
+      display: contents;
     }
 
     .count {
