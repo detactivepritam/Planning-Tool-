@@ -65,8 +65,8 @@
   .trigger {
     border: 1px solid var(--border);
     background: white;
-    border-radius: 14px;
-    padding: 0.7rem 0.95rem;
+    border-radius: 4px;
+    padding: 0.48rem 0.75rem;
     display: inline-flex;
     align-items: center;
     gap: 0.6rem;

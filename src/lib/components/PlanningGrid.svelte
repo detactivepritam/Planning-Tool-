@@ -227,13 +227,13 @@
 <style>
   .grid {
     overflow: hidden;
-    border-radius: 24px;
+    border-radius: 0;
   }
 
   .member-grid {
     overflow-x: auto;
     overflow-y: hidden;
-    border-radius: 24px;
+    border-radius: 0;
   }
 
   .summary {
@@ -253,7 +253,7 @@
   }
 
   .planning-shift {
-    min-height: 3.5rem;
+    min-height: 2.6rem;
     border: 1px solid var(--primary);
     border-radius: 6px;
     background: var(--primary-soft);
@@ -311,7 +311,7 @@
 
   .row {
     display: grid;
-    grid-template-columns: 14rem repeat(7, minmax(10rem, 1fr));
+    grid-template-columns: 12rem repeat(7, minmax(8rem, 1fr));
     border-bottom: 1px solid var(--border);
   }
 
@@ -322,8 +322,8 @@
   .corner,
   .cell,
   .day-cell {
-    min-height: 7.25rem;
-    padding: 0.9rem;
+    min-height: 5.1rem;
+    padding: 0.55rem 0.7rem;
     border: none;
     background: transparent;
     text-align: left;
@@ -331,8 +331,8 @@
 
   .header-row .corner,
   .header-row .day-cell {
-    min-height: 4.5rem;
-    background: rgba(247, 250, 255, 0.96);
+    min-height: 3.35rem;
+    background: #f6f8fa;
   }
 
   .day-heading {
@@ -345,17 +345,17 @@
 
   .availability-label {
     color: var(--muted);
-    font-size: 0.8rem;
+    font-size: 0.73rem;
     white-space: nowrap;
   }
 
   .event-row .corner,
   .event-row .cell {
-    min-height: 4rem;
+    min-height: 3.1rem;
   }
 
   .event-label {
-    min-height: 4rem;
+    min-height: 3.1rem;
   }
 
   .event-cell {
@@ -366,7 +366,7 @@
     width: 100%;
     min-height: 3rem;
     border: 1px solid var(--primary);
-    border-radius: 6px;
+    border-radius: 4px;
     background: rgba(220, 236, 255, 0.35);
     color: var(--primary);
     display: flex;
@@ -416,7 +416,7 @@
   .add {
     width: 2rem;
     height: 2rem;
-    border-radius: 0.75rem;
+    border-radius: 4px;
     border: 1px solid var(--border);
     background: white;
     flex: none;
@@ -425,12 +425,12 @@
   .create-shift {
     display: flex;
     width: 100%;
-    min-height: 2.4rem;
+    min-height: 2.1rem;
     align-items: center;
     justify-content: center;
     gap: 0.55rem;
     border: 1px solid var(--border);
-    border-radius: 6px;
+    border-radius: 4px;
     background: white;
     opacity: 0;
     transition: opacity 120ms ease, background 120ms ease;
@@ -473,8 +473,8 @@
   .shift-pill {
     width: 100%;
     border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 0.65rem 0.75rem;
+    border-radius: 4px;
+    padding: 0.45rem 0.55rem;
     background: white;
     display: grid;
     gap: 0.15rem;
@@ -482,7 +482,8 @@
   }
 
   .shift-pill {
-    background: linear-gradient(180deg, rgba(29, 124, 242, 0.09), rgba(29, 124, 242, 0.04));
+    background: #edf5ff;
+    border-color: #c7dcf8;
   }
 
   .shift-pill small {
@@ -492,7 +493,7 @@
   }
 
   .shift-pill.open {
-    background: linear-gradient(180deg, rgba(245, 108, 108, 0.14), rgba(245, 108, 108, 0.05));
+    background: #fff1f0;
   }
 
   .empty {
@@ -503,19 +504,19 @@
 
   .section {
     display: grid;
-    grid-template-columns: 14rem repeat(7, minmax(10rem, 1fr));
+    grid-template-columns: 12rem repeat(7, minmax(9rem, 1fr));
     border-top: 1px solid var(--border);
   }
 
   .compact {
-    min-height: 4rem;
+    min-height: 3.8rem;
     color: var(--muted);
   }
 
   @media (max-width: 1200px) {
     .row,
     .section {
-      grid-template-columns: 10rem repeat(7, minmax(10rem, 1fr));
+      grid-template-columns: 10rem repeat(7, minmax(9rem, 1fr));
     }
   }
 

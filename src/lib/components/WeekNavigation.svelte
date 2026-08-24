@@ -55,14 +55,16 @@
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
-    padding: 1rem 1.2rem;
-    border-radius: 22px;
-    margin-bottom: 1rem;
+    padding: 0.1rem 0.25rem;
+    border: none;
+    box-shadow: none;
+    border-radius: 0;
+    margin-bottom: 0;
   }
 
   .title {
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 1.3rem;
+    font-family: 'Manrope', sans-serif;
+    font-size: 1.1rem;
     font-weight: 700;
   }
 
@@ -73,7 +75,7 @@
 
   .controls {
     display: flex;
-    gap: 0.5rem;
+    gap: 0.35rem;
     align-items: center;
   }
 
@@ -82,7 +84,7 @@
   }
 
   .view-trigger {
-    min-width: 8.2rem;
+    min-width: 7rem;
     display: inline-flex;
     align-items: center;
     justify-content: space-between;
@@ -138,13 +140,14 @@
   button {
     border: 1px solid var(--border);
     background: white;
-    border-radius: 999px;
-    padding: 0.7rem 0.9rem;
-    min-width: 2.5rem;
+    border-radius: 4px;
+    padding: 0.42rem 0.7rem;
+    min-width: 2.25rem;
+    color: var(--text);
   }
 
   .today {
-    padding-inline: 1rem;
+    padding-inline: 0.85rem;
   }
 
   @media (max-width: 720px) {

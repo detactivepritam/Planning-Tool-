@@ -31,33 +31,36 @@
   .header {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-start;
     gap: 1rem;
-    padding: 0.9rem 1.2rem;
-    border-radius: 22px;
-    margin-bottom: 1rem;
+    padding: 0.5rem 0;
+    border: none;
+    border-radius: 0;
+    border-top: none;
+    margin-bottom: 0.35rem;
+    box-shadow: none;
   }
 
   .brand {
     display: flex;
     align-items: center;
-    gap: 0.85rem;
+    gap: 0.65rem;
   }
 
   .logo {
-    width: 2.5rem;
-    height: 2.5rem;
-    border-radius: 0.9rem;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 4px;
     display: grid;
     place-items: center;
-    background: linear-gradient(135deg, var(--primary), #5aa7ff);
+    background: var(--primary);
     color: white;
-    font-family: 'Space Grotesk', sans-serif;
+    font-family: 'Manrope', sans-serif;
     font-weight: 700;
   }
 
   .name {
-    font-family: 'Space Grotesk', sans-serif;
+    font-family: 'Manrope', sans-serif;
     font-weight: 700;
   }
 
@@ -71,13 +74,15 @@
     display: flex;
     align-items: center;
     gap: 0.75rem;
+    margin-left: auto;
+    min-width: 8.9rem;
   }
 
   .ghost {
     border: 1px solid var(--border);
     background: white;
-    border-radius: 999px;
-    padding: 0.65rem 1rem;
+    border-radius: 4px;
+    padding: 0.45rem 0.75rem;
     color: var(--text);
   }
 
@@ -85,6 +90,11 @@
     .header {
       align-items: flex-start;
       flex-direction: column;
+    }
+
+    .actions {
+      width: 100%;
+      justify-content: space-between;
     }
   }
 </style>

@@ -1,32 +1,29 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap');
 
 :root {
   color-scheme: light;
-  --bg: #f4f7fb;
-  --bg-accent: #eef4ff;
-  --surface: rgba(255, 255, 255, 0.92);
+  --bg: #f4f6f8;
+  --bg-accent: #eef5ff;
+  --surface: #ffffff;
   --surface-strong: #ffffff;
-  --border: rgba(25, 45, 80, 0.1);
-  --text: #132238;
-  --muted: #68768a;
-  --primary: #1d7cf2;
-  --primary-soft: #dcecff;
+  --border: #dfe4ea;
+  --text: #263342;
+  --muted: #718096;
+  --primary: #287be8;
+  --primary-soft: #e8f1ff;
   --danger: #f56c6c;
   --success: #1d9c73;
-  --shadow: 0 18px 50px rgba(30, 46, 82, 0.12);
-  --radius-xl: 24px;
-  --radius-lg: 18px;
-  --radius-md: 14px;
-  font-family: 'Inter', sans-serif;
+  --shadow: 0 1px 2px rgba(30, 46, 82, 0.04);
+  --radius-xl: 8px;
+  --radius-lg: 6px;
+  --radius-md: 4px;
+  font-family: 'DM Sans', sans-serif;
 }
 
 html, body {
   margin: 0;
   min-height: 100%;
-  background:
-    radial-gradient(circle at top left, rgba(29, 124, 242, 0.14), transparent 34%),
-    radial-gradient(circle at top right, rgba(255, 170, 92, 0.12), transparent 30%),
-    linear-gradient(180deg, #f9fbfe 0%, var(--bg) 100%);
+  background: var(--bg);
   color: var(--text);
 }
 
@@ -58,7 +55,6 @@ a {
   background: var(--surface);
   border: 1px solid var(--border);
   box-shadow: var(--shadow);
-  backdrop-filter: blur(10px);
 }
 
 .mono {

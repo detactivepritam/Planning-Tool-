@@ -351,17 +351,19 @@
 
 <style>
   .page {
-    max-width: 96rem;
+    max-width: none;
     margin: 0 auto;
-    padding: 1rem;
+    padding: 0 0.25rem 2rem;
   }
 
   .toolbar {
     position: relative;
     z-index: 30;
-    padding: 1rem;
-    border-radius: 28px;
-    margin-bottom: 1rem;
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    margin-bottom: 0.35rem;
   }
 
   .secondary-row {
@@ -369,42 +371,47 @@
     align-items: center;
     justify-content: space-between;
     gap: 1rem;
-    margin-top: 1rem;
+    margin-top: 0.35rem;
+    min-height: 2.45rem;
+    padding: 0.25rem 0.4rem;
+    background: #eef2f5;
+    border-block: 1px solid #dfe4e8;
     flex-wrap: wrap;
   }
 
   .count {
-    font-family: 'Space Grotesk', sans-serif;
-    font-size: 1.8rem;
+    font-family: 'Manrope', sans-serif;
+    font-size: 1.05rem;
     font-weight: 700;
+    color: #344256;
   }
 
   .menus {
     display: flex;
-    gap: 0.75rem;
-    flex-wrap: wrap;
+    gap: 0.4rem;
   }
 
   .planning {
     position: relative;
     z-index: 1;
     overflow: hidden;
+    border-radius: 0;
   }
 
   .bottom-panels {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 1rem;
-    margin-top: 1rem;
+    margin-top: 0.75rem;
   }
 
   .panel {
     padding: 1rem 1.2rem;
-    border-radius: 22px;
+    border-radius: 0;
   }
 
   .panel-title {
-    font-family: 'Space Grotesk', sans-serif;
+    font-family: 'Manrope', sans-serif;
     font-size: 1.1rem;
     font-weight: 700;
     margin-bottom: 0.4rem;
@@ -427,12 +434,12 @@
 
   @media (max-width: 600px) {
     .page {
-      padding: 0.5rem;
+      padding: 0 0.5rem 1rem;
     }
 
     .toolbar {
       padding: 0.65rem;
-      border-radius: 18px;
+      border-radius: 6px;
     }
 
     .secondary-row {
