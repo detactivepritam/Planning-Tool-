@@ -299,6 +299,7 @@
 
   <section class="planning surface">
     <PlanningGrid
+      {weekStart}
       dayDates={weekDays}
       teamRows={teamRows}
       shifts={shifts}
