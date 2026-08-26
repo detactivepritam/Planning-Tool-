@@ -10,6 +10,8 @@ export type Shift = {
   notes: string;
   published: boolean;
   openShift: boolean;
+  shiftDate?: string;
+  teamMemberId?: string | null;
 };
 
 export type EventItem = {
@@ -19,6 +21,7 @@ export type EventItem = {
   start?: string;
   end?: string;
   notes: string;
+  eventDate?: string;
 };
 
 export type TeamRow = {
@@ -41,8 +44,15 @@ export function createId() {
   return `item-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
-function pad(value: number) {
+export function pad(value: number) {
   return String(value).padStart(2, '0');
+}
+
+export function formatDateISO(date: Date): string {
+  const y = date.getFullYear();
+  const m = pad(date.getMonth() + 1);
+  const d = pad(date.getDate());
+  return `${y}-${m}-${d}`;
 }
 
 export function createWeekStart(date = new Date()) {
@@ -84,34 +94,20 @@ export function formatDayHeader(date: Date) {
   return `${date.toLocaleDateString('en-GB', { weekday: 'short' })} ${pad(date.getDate())} ${date.toLocaleDateString('en-GB', { month: 'short' })}`;
 }
 
+export function getDayIndexFromDate(dateStr: string, weekStart: Date): number {
+  if (!dateStr) return 0;
+  const target = new Date(dateStr);
+  target.setHours(0, 0, 0, 0);
+  const start = new Date(weekStart);
+  start.setHours(0, 0, 0, 0);
+  const diff = Math.round((target.getTime() - start.getTime()) / (24 * 60 * 60 * 1000));
+  return diff >= 0 && diff < 7 ? diff : 0;
+}
+
 export function defaultShifts(): Shift[] {
-  return [
-    {
-      id: 'shift-1',
-      teamId: 'general',
-      dayIndex: 0,
-      title: 'Opening',
-      start: '09:00',
-      end: '17:00',
-      breakDuration: '00:30',
-      type: 'Opening',
-      notes: 'Morning coverage',
-      published: false,
-      openShift: false
-    },
-    
-  ];
+  return [];
 }
 
 export function defaultEvents(): EventItem[] {
-  return [
-    {
-      id: 'event-1',
-      dayIndex: 3,
-      title: 'Team briefing',
-      start: '09:00',
-      end: '10:00',
-      notes: 'Weekly check-in'
-    }
-  ];
+  return [];
 }

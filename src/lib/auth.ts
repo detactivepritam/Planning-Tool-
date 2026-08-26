@@ -1,73 +1,162 @@
 import { browser } from '$app/environment';
 import { writable } from 'svelte/store';
 
-const STORAGE_KEY = 'proxy_planning_auth';
+export type UserProfile = {
+  id: string;
+  email: string;
+  fullName: string;
+  role: string;
+  organizationId: string;
+  organizationName: string;
+  phone?: string | null;
+};
 
-type AuthState = {
+export type AuthState = {
   isAuthenticated: boolean;
   user: string | null;
-  company?: string | null;
-  memberName?: string | null;
+  email: string | null;
+  company: string | null;
+  memberName: string | null;
+  organizationId: string | null;
+  role: string | null;
+  profile: UserProfile | null;
 };
 
 const initialState: AuthState = {
   isAuthenticated: false,
-  user: null
+  user: null,
+  email: null,
+  company: null,
+  memberName: null,
+  organizationId: null,
+  role: null,
+  profile: null
 };
 
 function createAuthStore() {
-  const { subscribe, set, update } = writable<AuthState>(initialState);
+  const { subscribe, set } = writable<AuthState>(initialState);
 
   return {
     subscribe,
-    initialize() {
-      if (!browser) {
-        return;
-      }
 
-      const raw = window.localStorage.getItem(STORAGE_KEY);
-      if (!raw) {
-        return;
-      }
+    async initialize(): Promise<AuthState> {
+      if (!browser) return initialState;
 
       try {
-        const parsed = JSON.parse(raw) as AuthState;
-        set({
-          isAuthenticated: Boolean(parsed.isAuthenticated),
-          user: parsed.user ?? null,
-          company: parsed.company ?? null,
-          memberName: parsed.memberName ?? null
+        const res = await fetch('/api/auth/me', {
+          headers: { 'Content-Type': 'application/json' }
         });
-      } catch {
-        window.localStorage.removeItem(STORAGE_KEY);
-      }
-    },
-    login(user: string, company: string | null = null, memberName: string | null = null) {
-      const nextState: AuthState = {
-        isAuthenticated: true,
-        user,
-        company,
-        memberName
-      };
 
-      set(nextState);
-
-      if (browser) {
-        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(nextState));
+        if (res.ok) {
+          const data = await res.json();
+          if (data.user) {
+            const nextState: AuthState = {
+              isAuthenticated: true,
+              user: data.user.fullName || data.user.email,
+              email: data.user.email,
+              company: data.user.organizationName,
+              memberName: data.user.fullName,
+              organizationId: data.user.organizationId,
+              role: data.user.role,
+              profile: data.user
+            };
+            set(nextState);
+            return nextState;
+          }
+        }
+      } catch (err) {
+        console.error('Failed to restore session:', err);
       }
-    },
-    logout() {
+
       set(initialState);
+      return initialState;
+    },
 
-      if (browser) {
-        window.localStorage.removeItem(STORAGE_KEY);
+    async login(identity: string, password: string): Promise<{ success: boolean; error?: string }> {
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ identity, password })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || data.error) {
+          return { success: false, error: data.error?.message || 'Login failed.' };
+        }
+
+        const user = data.user;
+        const nextState: AuthState = {
+          isAuthenticated: true,
+          user: user.fullName || user.email,
+          email: user.email,
+          company: user.organizationName,
+          memberName: user.fullName,
+          organizationId: user.organizationId,
+          role: user.role,
+          profile: user
+        };
+
+        set(nextState);
+        return { success: true };
+      } catch (err: any) {
+        console.error('Login error:', err);
+        return { success: false, error: 'Network or server error during login.' };
       }
     },
-    setGuest() {
-      update((state) => ({
-        ...state,
-        user: state.user ?? 'Guest'
-      }));
+
+    async signup(payload: {
+      email: string;
+      password: string;
+      fullName: string;
+      company: string;
+      phone?: string;
+    }): Promise<{ success: boolean; error?: string }> {
+      try {
+        const res = await fetch('/api/auth/signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || data.error) {
+          return { success: false, error: data.error?.message || 'Signup failed.' };
+        }
+
+        const user = data.user;
+        const nextState: AuthState = {
+          isAuthenticated: true,
+          user: user.fullName || user.email,
+          email: user.email,
+          company: user.organizationName,
+          memberName: user.fullName,
+          organizationId: user.organizationId,
+          role: user.role,
+          profile: user
+        };
+
+        set(nextState);
+        return { success: true };
+      } catch (err: any) {
+        console.error('Signup error:', err);
+        return { success: false, error: 'Network or server error during signup.' };
+      }
+    },
+
+    async logout(): Promise<void> {
+      try {
+        await fetch('/api/auth/logout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+      } catch (err) {
+        console.error('Logout error:', err);
+      } finally {
+        set(initialState);
+      }
     }
   };
 }

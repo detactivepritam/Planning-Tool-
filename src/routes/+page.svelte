@@ -1,32 +1,72 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
+  import { onMount } from 'svelte';
   import Login from '$lib/components/Login.svelte';
   import Signup from '$lib/components/Signup.svelte';
   import { auth } from '$lib/auth';
 
   let loading = false;
   let signup = false;
+  let errorMessage = '';
+
+  onMount(async () => {
+    const state = await auth.initialize();
+    if (state.isAuthenticated) {
+      await goto('/planning', { invalidateAll: true });
+    }
+  });
 
   async function handleLogin(event: CustomEvent<{ identity: string; password: string }>) {
     loading = true;
-    const { identity } = event.detail;
+    errorMessage = '';
+    const { identity, password } = event.detail;
 
-    auth.login(identity);
-    await goto('/planning', { invalidateAll: true });
+    const result = await auth.login(identity, password);
+    if (result.success) {
+      await goto('/planning', { invalidateAll: true });
+    } else {
+      errorMessage = result.error || 'Invalid credentials.';
+    }
     loading = false;
   }
 
-  async function handleSignup(event: CustomEvent<{ email: string; company: string; memberName: string }>) {
+  async function handleSignup(
+    event: CustomEvent<{
+      email: string;
+      company: string;
+      memberName: string;
+      password: string;
+      phone?: string;
+    }>
+  ) {
     loading = true;
-    auth.login(event.detail.email, event.detail.company, event.detail.memberName);
-    await goto('/planning', { invalidateAll: true });
+    errorMessage = '';
+
+    const result = await auth.signup({
+      email: event.detail.email,
+      company: event.detail.company,
+      fullName: event.detail.memberName,
+      password: event.detail.password,
+      phone: event.detail.phone
+    });
+
+    if (result.success) {
+      await goto('/planning', { invalidateAll: true });
+    } else {
+      errorMessage = result.error || 'Could not create account.';
+    }
     loading = false;
+  }
+
+  function toggleMode(isSignup: boolean) {
+    signup = isSignup;
+    errorMessage = '';
   }
 </script>
 
 <svelte:head>
   <title>Proxie Planning Tool</title>
-  <meta name="description" content="Proxie login page" />
+  <meta name="description" content="Proxie login and authentication" />
 </svelte:head>
 
 <main class="login-page">
@@ -41,17 +81,17 @@
 
     <div class="copy">
       <h1>Plan the week with clarity.</h1>
-      <p>Sign in to access the planning workspace and manage shifts, events, and scheduling across the week.</p>
+      <p>Sign in to access your organization's planning workspace and manage shifts, events, and scheduling across the week.</p>
     </div>
   </section>
 
   <div class="auth-column">
     {#if signup}
-      <Signup on:complete={handleSignup} />
-      <button class="switch" type="button" on:click={() => signup = false}>Already have an account? Sign in</button>
+      <Signup {loading} {errorMessage} on:complete={handleSignup} />
+      <button class="switch" type="button" on:click={() => toggleMode(false)}>Already have an account? Sign in</button>
     {:else}
-      <Login {loading} on:login={handleLogin} />
-      <button class="switch" type="button" on:click={() => signup = true}>Create an account</button>
+      <Login {loading} {errorMessage} on:login={handleLogin} />
+      <button class="switch" type="button" on:click={() => toggleMode(true)}>Create an account</button>
     {/if}
   </div>
 </main>
@@ -136,6 +176,7 @@
     background: transparent;
     color: var(--primary);
     cursor: pointer;
+    font-weight: 600;
   }
 
   @media (max-width: 960px) {

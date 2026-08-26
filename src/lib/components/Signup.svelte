@@ -1,7 +1,12 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
 
-  const dispatch = createEventDispatcher<{ complete: { email: string; company: string; memberName: string } }>();
+  const dispatch = createEventDispatcher<{
+    complete: { email: string; company: string; memberName: string; password: string; phone?: string }
+  }>();
+
+  export let loading = false;
+  export let errorMessage = '';
 
   let step = 1;
   let name = '';
@@ -10,31 +15,46 @@
   let email = '';
   let password = '';
   let company = '';
-  let error = '';
+  let localError = '';
+
+  $: currentError = errorMessage || localError;
 
   function next() {
+    localError = '';
     if (step === 1) {
       if (!name.trim() || !email.trim() || !password) {
-        error = 'Complete all required fields.';
+        localError = 'Complete all required fields.';
         return;
       }
 
-      if (!/^.{8,}$/.test(password) || !/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/\d/.test(password)) {
-        error = 'The password must contain at least 8 characters, including 1 uppercase letter, 1 lowercase letter, and 1 digit.';
+      if (password.length < 6) {
+        localError = 'The password must contain at least 6 characters.';
         return;
       }
 
-      error = '';
+      localError = '';
       step = 2;
       return;
     }
 
     if (!company.trim()) {
-      error = 'Enter your company name.';
+      localError = 'Enter your company or organization name.';
       return;
     }
 
-    dispatch('complete', { email: email.trim(), company: company.trim(), memberName: `${name.trim()} ${lastName.trim()}`.trim() });
+    dispatch('complete', {
+      email: email.trim(),
+      company: company.trim(),
+      memberName: `${name.trim()} ${lastName.trim()}`.trim(),
+      password,
+      phone: phone.trim() || undefined
+    });
+  }
+
+  function handleKeydown(event: KeyboardEvent) {
+    if (event.key === 'Enter') {
+      next();
+    }
   }
 </script>
 
@@ -43,22 +63,28 @@
     <div class="steps" aria-label="Step 2 of 2"><span class="done"></span><span class="done"></span></div>
   {/if}
 
-  <h1>{step === 1 ? 'Create your account' : 'Create your company'}</h1>
-  <p>Try Eitje for free and without hassle. No credit card required.</p>
+  <h1>{step === 1 ? 'Create your account' : 'Create your workspace'}</h1>
+  <p>{step === 1 ? 'Register to start scheduling your team.' : 'Set up your organization workspace.'}</p>
 
   {#if step === 1}
-    <label><span>Name*</span><input bind:value={name} type="text" autocomplete="given-name" /></label>
-    <label><span>Last name</span><input bind:value={lastName} type="text" autocomplete="family-name" /></label>
-    <label><span>Phone number</span><input bind:value={phone} type="tel" autocomplete="tel" /></label>
-    <label><span>Email*</span><input bind:value={email} type="email" autocomplete="email" /></label>
-    <label class:error-field={error && password}><span>Password*</span><input bind:value={password} type="password" autocomplete="new-password" /></label>
+    <label><span>First Name*</span><input bind:value={name} type="text" autocomplete="given-name" on:keydown={handleKeydown} /></label>
+    <label><span>Last Name</span><input bind:value={lastName} type="text" autocomplete="family-name" on:keydown={handleKeydown} /></label>
+    <label><span>Phone Number</span><input bind:value={phone} type="tel" autocomplete="tel" on:keydown={handleKeydown} /></label>
+    <label><span>Email*</span><input bind:value={email} type="email" autocomplete="email" on:keydown={handleKeydown} /></label>
+    <label class:error-field={currentError && password}><span>Password*</span><input bind:value={password} type="password" autocomplete="new-password" on:keydown={handleKeydown} /></label>
   {:else}
-    <label><span>Company name*</span><input bind:value={company} type="text" autocomplete="organization" /></label>
+    <label><span>Company / Workspace Name*</span><input bind:value={company} type="text" autocomplete="organization" on:keydown={handleKeydown} /></label>
   {/if}
 
-  {#if error}<div class="error">{error}</div>{/if}
+  {#if currentError}<div class="error">{currentError}</div>{/if}
 
-  <button class="next" type="button" on:click={next}><span aria-hidden="true">→</span> Next</button>
+  <button class="next" type="button" disabled={loading} on:click={next}>
+    {#if loading}
+      Creating account...
+    {:else}
+      <span aria-hidden="true">→</span> {step === 1 ? 'Next' : 'Create Account'}
+    {/if}
+  </button>
 </div>
 
 <style>
@@ -123,11 +149,6 @@
     box-shadow: 0 0 0 3px rgba(29, 124, 242, 0.12);
   }
 
-  .error-field input,
-  .error-field {
-    color: var(--danger);
-  }
-
   .error-field input {
     border-color: var(--danger);
     background: rgba(245, 108, 108, 0.12);
@@ -137,6 +158,7 @@
     color: var(--danger);
     font-size: 0.9rem;
     line-height: 1.45;
+    font-weight: 600;
   }
 
   .next {
@@ -147,6 +169,12 @@
     background: var(--primary);
     color: white;
     font-weight: 700;
+    cursor: pointer;
+  }
+
+  .next:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
   }
 
   .next span {

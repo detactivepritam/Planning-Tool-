@@ -4,32 +4,31 @@
   const dispatch = createEventDispatcher<{ login: { identity: string; password: string } }>();
 
   export let loading = false;
+  export let errorMessage = '';
 
   let identity = '';
   let password = '';
-  let error = '';
+  let localError = '';
+
+  $: currentError = errorMessage || localError;
 
   function validate() {
     if (!identity.trim()) {
-      error = 'Enter your email or username.';
+      localError = 'Enter your email or username.';
       return false;
     }
 
     if (!password.trim()) {
-      error = 'Enter your password.';
+      localError = 'Enter your password.';
       return false;
     }
 
-    if (password.trim().length < 4) {
-      error = 'Use at least 4 characters for the demo login.';
-      return false;
-    }
-
-    error = '';
+    localError = '';
     return true;
   }
 
   function submitForm() {
+    localError = '';
     if (!validate()) {
       return;
     }
@@ -39,25 +38,43 @@
       password: password.trim()
     });
   }
+
+  function handleKeydown(event: KeyboardEvent) {
+    if (event.key === 'Enter') {
+      submitForm();
+    }
+  }
 </script>
 
 <div class="login-card surface">
   <div class="eyebrow">Proxie Planning Tool</div>
   <h1>Sign in to plan the week</h1>
-  <p>Use the demo login to enter the planning workspace.</p>
+  <p>Enter your account credentials to access your planning workspace.</p>
 
   <label>
     <span>Email or username</span>
-    <input bind:value={identity} type="text" placeholder="planner@proxy.local" autocomplete="username" />
+    <input
+      bind:value={identity}
+      type="text"
+      placeholder="user@example.com"
+      autocomplete="username"
+      on:keydown={handleKeydown}
+    />
   </label>
 
   <label>
     <span>Password</span>
-    <input bind:value={password} type="password" placeholder="••••••••" autocomplete="current-password" />
+    <input
+      bind:value={password}
+      type="password"
+      placeholder="••••••••"
+      autocomplete="current-password"
+      on:keydown={handleKeydown}
+    />
   </label>
 
-  {#if error}
-    <div class="error">{error}</div>
+  {#if currentError}
+    <div class="error">{currentError}</div>
   {/if}
 
   <button class="primary" type="button" disabled={loading} on:click={submitForm}>
@@ -67,8 +84,6 @@
       Login
     {/if}
   </button>
-
-  <div class="hint">Demo credentials: any username with any password of 4+ characters.</div>
 </div>
 
 <style>
@@ -96,7 +111,6 @@
   }
 
   p,
-  .hint,
   .error,
   span {
     color: var(--muted);
@@ -129,14 +143,17 @@
     background: linear-gradient(135deg, var(--primary), #5aa7ff);
     color: white;
     font-weight: 700;
+    cursor: pointer;
+  }
+
+  .primary:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
   }
 
   .error {
     color: var(--danger);
     font-size: 0.92rem;
-  }
-
-  .hint {
-    font-size: 0.88rem;
+    font-weight: 600;
   }
 </style>

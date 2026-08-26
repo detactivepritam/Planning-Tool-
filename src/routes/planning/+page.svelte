@@ -11,13 +11,13 @@
   import {
     createWeekStart,
     createId,
-    defaultEvents,
-    defaultShifts,
+    formatDateISO,
+    getDayIndexFromDate,
     getWeekDays,
     type EventItem,
     type Shift,
-    weekKey,
-    teamRows
+    type TeamRow,
+    teamRows as defaultTeams
   } from '$lib/planning';
   import { onMount } from 'svelte';
 
@@ -25,6 +25,7 @@
   let selectedDayIndex = 0;
   let shifts: Shift[] = [];
   let events: EventItem[] = [];
+  let teams: TeamRow[] = defaultTeams;
   let shiftModalOpen = false;
   let eventModalOpen = false;
   let editingShift: Shift | null = null;
@@ -36,53 +37,96 @@
   let showAvailability = true;
   let showAbsent = true;
   let viewMode = 'Per team';
-
-  const weekStoragePrefix = 'proxy_planning_week_';
-
-  onMount(() => {
-    auth.initialize();
-    let isAuthed = false;
-    auth.subscribe((value) => {
-      isAuthed = value.isAuthenticated;
-    })();
-
-    if (!isAuthed) {
-      goto('/');
-    }
-
-    loadWeekState();
-  });
+  let loading = false;
 
   $: weekDays = getWeekDays(weekStart);
   $: plannedShiftCount = shifts.length;
   $: dayLabels = weekDays.map((date) => date.toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short' }));
-  $: memberName = $auth.memberName ?? 'Planner';
+  $: memberName = $auth.memberName || $auth.user || 'Planner';
 
-  function loadWeekState() {
-    const key = `${weekStoragePrefix}${weekKey(weekStart)}`;
-    const raw = localStorage.getItem(key);
-
-    if (!raw) {
-      selectedDayIndex = 0;
-      shifts = [];
-      events = [];
+  onMount(async () => {
+    const state = await auth.initialize();
+    if (!state.isAuthenticated) {
+      goto('/');
       return;
     }
+    await loadWeekState();
+  });
 
-    const parsed = JSON.parse(raw) as { shifts: Shift[]; events: EventItem[]; selectedDayIndex: number };
-    shifts = (parsed.shifts ?? defaultShifts()).filter((shift) => shift.teamId === 'general');
-    events = (parsed.events ?? defaultEvents()).map((eventItem) => ({
-      ...eventItem,
-      dayIndex: Number(eventItem.dayIndex),
-      start: eventItem.start ?? '09:00',
-      end: eventItem.end ?? '10:00'
-    }));
-    selectedDayIndex = parsed.selectedDayIndex ?? 0;
-  }
+  async function loadWeekState() {
+    loading = true;
+    const from = formatDateISO(weekDays[0]);
+    const to = formatDateISO(weekDays[6]);
 
-  function saveWeekState() {
-    const key = `${weekStoragePrefix}${weekKey(weekStart)}`;
-    localStorage.setItem(key, JSON.stringify({ shifts, events, selectedDayIndex }));
+    try {
+      const res = await fetch(`/api/planning/summary?from=${from}&to=${to}`);
+      if (res.status === 401) {
+        goto('/');
+        return;
+      }
+
+      if (res.ok) {
+        const data = await res.json();
+
+        // Update Teams
+        if (data.teams && data.teams.length > 0) {
+          teams = data.teams.map((t: any) => ({
+            id: t.id,
+            name: t.name,
+            label: 'Team'
+          }));
+        } else {
+          teams = [{ id: 'general', name: 'Algemeen', label: 'Team' }];
+        }
+
+        // Map Shifts from database
+        shifts = (data.shifts || []).map((s: any) => {
+          const shiftDateStr = typeof s.shift_date === 'string' ? s.shift_date.split('T')[0] : formatDateISO(new Date(s.shift_date));
+          const dayIdx = getDayIndexFromDate(shiftDateStr, weekStart);
+          const start = s.start_time ? s.start_time.slice(0, 5) : '09:00';
+          const end = s.end_time ? s.end_time.slice(0, 5) : '17:00';
+          const breakMins = s.break_minutes || 0;
+          const breakHours = Math.floor(breakMins / 60).toString().padStart(2, '0');
+          const breakRem = (breakMins % 60).toString().padStart(2, '0');
+
+          return {
+            id: s.id,
+            teamId: s.team_id || teams[0]?.id || 'general',
+            dayIndex: dayIdx,
+            title: s.shift_type || 'Standard',
+            start,
+            end,
+            breakDuration: `${breakHours}:${breakRem}`,
+            type: s.shift_type || 'Standard',
+            notes: s.note || '',
+            published: s.status === 'published',
+            openShift: Boolean(s.is_open),
+            shiftDate: shiftDateStr,
+            teamMemberId: s.team_member_id
+          };
+        });
+
+        // Map Events from database
+        events = (data.events || []).map((e: any) => {
+          const eventDateStr = typeof e.event_date === 'string' ? e.event_date.split('T')[0] : formatDateISO(new Date(e.event_date));
+          const dayIdx = getDayIndexFromDate(eventDateStr, weekStart);
+
+          return {
+            id: e.id,
+            dayIndex: dayIdx,
+            title: e.title,
+            start: e.start_time ? e.start_time.slice(0, 5) : '09:00',
+            end: e.end_time ? e.end_time.slice(0, 5) : '10:00',
+            notes: e.description || '',
+            eventDate: eventDateStr
+          };
+        });
+      }
+    } catch (err) {
+      console.error('Failed to load planning data:', err);
+    } finally {
+      loading = false;
+    }
   }
 
   function previousWeek() {
@@ -107,8 +151,8 @@
   function openShiftModal(teamId: string, dayIndex: number) {
     planningShiftDraft = false;
     editingShift = {
-      id: createId(),
-      teamId,
+      id: '',
+      teamId: teamId || teams[0]?.id || 'general',
       dayIndex,
       title: 'New shift',
       start: '09:00',
@@ -124,16 +168,16 @@
 
   function openPlanningShiftModal(dayIndex: number) {
     planningShiftDraft = true;
-    openShiftModal('general', dayIndex);
+    openShiftModal(teams[0]?.id || 'general', dayIndex);
     planningShiftDraft = true;
   }
 
   function editShift(shift: Shift) {
-    editingShift = shift;
+    editingShift = { ...shift };
     shiftModalOpen = true;
   }
 
-  function saveShift(shift: Shift) {
+  async function saveShift(shift: Shift) {
     if (planningShiftDraft) {
       shiftModalOpen = false;
       editingShift = null;
@@ -141,29 +185,60 @@
       return;
     }
 
-    const savedShift: Shift = {
-      ...shift,
-      teamId: String(shift.teamId),
-      dayIndex: Number(shift.dayIndex)
-    };
-    const existingIndex = shifts.findIndex((item) => item.id === savedShift.id);
+    const targetDate = formatDateISO(weekDays[shift.dayIndex]);
+    const breakParts = (shift.breakDuration || '00:00').split(':');
+    const breakMinutes = (parseInt(breakParts[0], 10) || 0) * 60 + (parseInt(breakParts[1], 10) || 0);
 
-    if (existingIndex === -1) {
-      shifts = [...shifts, savedShift];
-    } else {
-      const next = [...shifts];
-      next[existingIndex] = savedShift;
-      shifts = next;
+    const payload = {
+      teamId: shift.teamId !== 'general' ? shift.teamId : (teams[0]?.id !== 'general' ? teams[0]?.id : null),
+      teamMemberId: shift.teamMemberId || null,
+      shiftDate: targetDate,
+      startTime: shift.start.length === 5 ? shift.start : '09:00',
+      endTime: shift.end.length === 5 ? shift.end : '17:00',
+      breakMinutes,
+      shiftType: shift.type || shift.title || 'Standard',
+      note: shift.notes || '',
+      status: shift.published ? 'published' : 'draft',
+      isOpen: Boolean(shift.openShift)
+    };
+
+    try {
+      if (shift.id && shift.id.length > 20) {
+        // Update existing shift
+        await fetch(`/api/shifts/${shift.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      } else {
+        // Create new shift in DB
+        await fetch('/api/shifts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      }
+      await loadWeekState();
+    } catch (err) {
+      console.error('Failed to save shift:', err);
     }
 
-    saveWeekState();
     shiftModalOpen = false;
     editingShift = null;
   }
 
-  function deleteShift(shiftId: string) {
-    shifts = shifts.filter((item) => item.id !== shiftId);
-    saveWeekState();
+  async function deleteShift(shiftId: string) {
+    if (shiftId && shiftId.length > 20) {
+      try {
+        await fetch(`/api/shifts/${shiftId}`, { method: 'DELETE' });
+        await loadWeekState();
+      } catch (err) {
+        console.error('Failed to delete shift:', err);
+      }
+    } else {
+      shifts = shifts.filter((item) => item.id !== shiftId);
+    }
+
     shiftModalOpen = false;
     editingShift = null;
     planningShiftDraft = false;
@@ -171,7 +246,7 @@
 
   function openEventModal(dayIndex: number) {
     editingEvent = {
-      id: createId(),
+      id: '',
       dayIndex,
       title: 'New event',
       start: '09:00',
@@ -182,35 +257,55 @@
   }
 
   function editEvent(eventItem: EventItem) {
-    editingEvent = eventItem;
+    editingEvent = { ...eventItem };
     eventModalOpen = true;
   }
 
-  function saveEvent(eventItem: EventItem) {
-    const savedEvent: EventItem = {
-      ...eventItem,
-      dayIndex: Number(eventItem.dayIndex),
-      start: eventItem.start ?? '09:00',
-      end: eventItem.end ?? '10:00'
+  async function saveEvent(eventItem: EventItem) {
+    const targetDate = formatDateISO(weekDays[eventItem.dayIndex]);
+    const payload = {
+      title: eventItem.title.trim() || 'Event',
+      eventDate: targetDate,
+      startTime: eventItem.start || '09:00',
+      endTime: eventItem.end || '10:00',
+      description: eventItem.notes || ''
     };
-    const existingIndex = events.findIndex((item) => item.id === savedEvent.id);
 
-    if (existingIndex === -1) {
-      events = [...events, savedEvent];
-    } else {
-      const next = [...events];
-      next[existingIndex] = savedEvent;
-      events = next;
+    try {
+      if (eventItem.id && eventItem.id.length > 20) {
+        await fetch(`/api/events/${eventItem.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      } else {
+        await fetch('/api/events', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      }
+      await loadWeekState();
+    } catch (err) {
+      console.error('Failed to save event:', err);
     }
 
-    saveWeekState();
     eventModalOpen = false;
     editingEvent = null;
   }
 
-  function deleteEvent(eventId: string) {
-    events = events.filter((item) => item.id !== eventId);
-    saveWeekState();
+  async function deleteEvent(eventId: string) {
+    if (eventId && eventId.length > 20) {
+      try {
+        await fetch(`/api/events/${eventId}`, { method: 'DELETE' });
+        await loadWeekState();
+      } catch (err) {
+        console.error('Failed to delete event:', err);
+      }
+    } else {
+      events = events.filter((item) => item.id !== eventId);
+    }
+
     eventModalOpen = false;
     editingEvent = null;
   }
@@ -225,9 +320,6 @@
   }
 
   function loadTemplate() {
-    shifts = defaultShifts();
-    events = defaultEvents();
-    saveWeekState();
     closeMenus();
   }
 
@@ -241,9 +333,6 @@
   }
 
   function clearWeek() {
-    shifts = [];
-    events = [];
-    saveWeekState();
     closeMenus();
   }
 
@@ -301,7 +390,7 @@
     <PlanningGrid
       {weekStart}
       dayDates={weekDays}
-      teamRows={teamRows}
+      teamRows={teams}
       shifts={shifts}
       events={events}
       onAddShift={openShiftModal}
@@ -334,7 +423,7 @@
 <ShiftModal
   open={shiftModalOpen}
   shift={editingShift}
-  teamRows={teamRows}
+  teamRows={teams}
   dayLabels={dayLabels}
   onSave={saveShift}
   onDelete={deleteShift}
