@@ -13,7 +13,12 @@ const { Pool } = pg;
 
 const connectionString = process.env.DATABASE_URL || 'postgresql://postgres:Roni%40157890@localhost:5432/proxie_planning_db';
 
-const pool = new Pool({ connectionString });
+const isCloud = connectionString.includes('supabase') || connectionString.includes('neon') || connectionString.includes('sslmode=require');
+
+const pool = new Pool({
+  connectionString,
+  ssl: isCloud ? { rejectUnauthorized: false } : undefined
+});
 
 async function run() {
   const schemaPath = path.resolve(__dirname, '../src/lib/server/db/schema.sql');
